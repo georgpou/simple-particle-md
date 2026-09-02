@@ -1,0 +1,9 @@
+name: simple_particle_md
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy>=1.22.0
+  - matplotlib>=3.5.0
+  - pyyaml>=6.0
+  - pillow>=9.0.0

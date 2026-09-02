@@ -1,0 +1,5 @@
+.venv/
+__pycache__/
+*.py[cod]
+sim_results/
+.DS_Store

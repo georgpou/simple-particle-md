@@ -1,0 +1,49 @@
+# Simulation configuration for an ionic binary mixture in a periodic box.
+
+system:
+  box_size: [8.0, 8.0, 8.0]
+  lattice: "grid"                # "grid" avoids overlapping initial cores; or "random"
+  initial_temperature: 1.2
+  boltzmann_constant: 1.0
+
+  species:
+    - name: "Cation (+)"
+      count: 32
+      mass: 1.0
+      charge: 1.0
+      sigma: 0.85
+      epsilon: 1.0
+
+    - name: "Anion (-)"
+      count: 32
+      mass: 1.0
+      charge: -1.0
+      sigma: 1.0
+      epsilon: 1.0
+
+potential:
+  cutoff_radius: 3.8             # Must be <= min(box_size) / 2
+  coulomb_constant: 2.0
+  shift: true
+
+integrator:
+  type: "velocity_verlet"
+  dt: 0.002
+  ensemble: "NVT"                # "NVT" or "NVE"
+  thermostat: "berendsen"        # "berendsen" or "andersen"
+  target_temperature: 1.2
+  tau: 0.05
+  collision_frequency: 1.0
+
+simulation:
+  total_steps: 1000
+  log_interval: 20
+  trajectory_interval: 10
+
+output:
+  output_dir: "./sim_results"
+  log_file: "thermodynamics.csv"
+  trajectory_file: "trajectory.npz"
+  energy_plot: "thermodynamics.png"
+  rdf_plot: "rdf.png"
+  animation: "simulation_3d.gif"
