@@ -58,6 +58,7 @@ jobs:
           OMP_NUM_THREADS: '2'
           OPENMM_CPU_THREADS: '2'
         run: |
+          set -o pipefail
           python experiments/lysozyme_mace_link_atom_probe.py | tee lysozyme-mace-link-atoms.log
 
       - name: Upload results
