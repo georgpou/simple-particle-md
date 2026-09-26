@@ -1,0 +1,59 @@
+name: MACE OpenMM link-atom probe
+
+on:
+  push:
+    branches:
+      - experiment/mace-openmm-link-atoms
+  workflow_dispatch:
+
+jobs:
+  compatibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout experiment repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install CPU PyTorch and scientific stack
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install \
+            'openmm==8.6.1' \
+            'mace-torch==0.3.16' \
+            'numpy<3' \
+            pytest
+          python -m pip install 'git+https://github.com/openmm/openmm-ml.git@a7fb40ebecd031db3a5d1da08202cad6819c366f'
+
+      - name: Clone pinned OpenMM-ML source for upstream test data
+        run: |
+          git clone https://github.com/openmm/openmm-ml.git /tmp/openmm-ml
+          git -C /tmp/openmm-ml checkout a7fb40ebecd031db3a5d1da08202cad6819c366f
+
+      - name: Show installed versions
+        run: |
+          python --version
+          python -m pip freeze | sort
+
+      - name: Run MACE/OpenMM-ML compatibility probe
+        env:
+          OPENMM_ML_ROOT: /tmp/openmm-ml
+          OMP_NUM_THREADS: '2'
+          OPENMM_CPU_THREADS: '2'
+        run: |
+          python experiments/mace_openmm_link_atoms.py | tee mace-openmm-link-atoms.log
+
+      - name: Upload probe log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mace-openmm-link-atoms-log
+          path: mace-openmm-link-atoms.log
+          if-no-files-found: warn
