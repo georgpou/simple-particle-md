@@ -1,0 +1,64 @@
+name: Lysozyme MACE link-atom probe
+
+on:
+  push:
+    branches:
+      - experiment/mace-openmm-lysozyme-qmmm-boundaries
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  lysozyme-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install CPU scientific stack
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install \
+            'openmm==8.6.1' \
+            'mace-torch==0.3.16' \
+            'numpy<3'
+          python -m pip install 'git+https://github.com/openmm/openmm-ml.git@a7fb40ebecd031db3a5d1da08202cad6819c366f'
+
+      - name: Download HEWL structure
+        run: |
+          curl -fsSL https://files.rcsb.org/download/1LYZ.pdb -o /tmp/1LYZ.pdb
+          grep '^ATOM' /tmp/1LYZ.pdb | head
+
+      - name: Show versions
+        run: |
+          python --version
+          python -m pip freeze | sort
+
+      - name: Run rigorous protein compatibility probe
+        env:
+          LYSOZYME_PDB: /tmp/1LYZ.pdb
+          MACE_MODEL: mace-off24-medium
+          OMP_NUM_THREADS: '2'
+          OPENMM_CPU_THREADS: '2'
+        run: |
+          python experiments/lysozyme_mace_link_atom_probe.py | tee lysozyme-mace-link-atoms.log
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lysozyme-mace-link-atom-results
+          path: |
+            lysozyme-mace-link-atoms.log
+            lysozyme-mace-link-atom-results.json
+          if-no-files-found: warn
