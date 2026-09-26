@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - experiment/mace-openmm-link-atoms
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
